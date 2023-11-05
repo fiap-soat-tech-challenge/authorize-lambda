@@ -1,0 +1,39 @@
+name: Deploy Authorize Lambda
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  FUNCTION_NAME: "authorize"
+
+jobs:
+  deploy:
+    name: "Deploying lambda"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-2
+
+      - name: Compressing files
+        run: zip -r lambda.zip node_modules index.js
+
+      - name: Deploying lambda
+        run: aws lambda update-function-code --function-name=$FUNCTION_NAME --zip-file=fileb://lambda.zip
