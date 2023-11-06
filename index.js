@@ -42,11 +42,15 @@ exports.handler = (event, context, callback) => {
 
   const secret = Buffer.from(process.env.JWT_SECRET, 'base64');
 
-  const decoded = jwt.verify(token, secret);
+  try {
+    const decoded = jwt.verify(token, secret);
 
-  if (decoded && decoded.id) {
-    return callback(null, generateAuthResponse(decoded.id, 'Allow', methodArn));
-  } else {
-    return callback(null, generateAuthResponse(decoded.id, 'Deny', methodArn));
+    if (decoded && decoded.cpf) {
+      return callback(null, generateAuthResponse(decoded.cpf, 'Allow', methodArn));
+    } else {
+      return callback(null, generateAuthResponse('user', 'Deny', methodArn));
+    }
+  } catch (e) {
+    return callback(null, 'Unauthorized');
   }
 }
